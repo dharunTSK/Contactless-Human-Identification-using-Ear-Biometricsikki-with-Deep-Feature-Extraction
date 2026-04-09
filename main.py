@@ -128,6 +128,7 @@ class EarBiometricsApp(ctk.CTk):
         self._stats         = {"classes": 0, "images": 0, "accuracy": "—", "model": "Not Trained"}
         self._dataset_root  = tk.StringVar(value="")
         self._identify_path = tk.StringVar(value="")
+        self._request_capture = False
 
         # ── layout ───────────────────────────────────────────────────────────
         self._build_sidebar()
@@ -427,10 +428,30 @@ class EarBiometricsApp(ctk.CTk):
         ctk.CTkLabel(feed_frame, text="Camera Feed", font=FONT_HEADER,
                      text_color=C_SUBTEXT).pack(pady=(12,4))
 
-        self._cam_label = ctk.CTkLabel(feed_frame, text="Camera not started.",
-                                       font=FONT_BODY, text_color=C_SUBTEXT,
-                                       width=560, height=420)
-        self._cam_label.pack(padx=12, pady=(0,12))
+        self._cam_label = tk.Label(feed_frame, text="Camera not started.",
+                                   font=("Segoe UI", 11), fg="#8888aa", bg="#1a1a2e",
+                                   width=70, height=22)
+        self._cam_label.pack(padx=12, pady=(0,12), fill="both", expand=True)
+
+        # -- Dataset Builder UI --
+        ctk.CTkFrame(feed_frame, height=1, fg_color="#333355").pack(fill="x", padx=16, pady=4)
+        db_row = ctk.CTkFrame(feed_frame, fg_color="transparent")
+        db_row.pack(fill="x", padx=16, pady=8)
+        
+        ctk.CTkLabel(db_row, text="Identity:", font=FONT_SMALL, text_color=C_SUBTEXT).pack(side="left", padx=(0,6))
+        self._capture_name_var = tk.StringVar(value="Person_New")
+        ctk.CTkEntry(db_row, textvariable=self._capture_name_var, width=120, height=32, font=FONT_BODY).pack(side="left")
+        
+        self._capture_btn = ctk.CTkButton(
+            db_row, text="📸 Capture Ear (Live)", width=160, height=32,
+            fg_color=C_PURPLE, hover_color="#5a0898", text_color=C_TEXT,
+            font=("Segoe UI", 11, "bold"), corner_radius=8,
+            command=self._trigger_capture
+        )
+        self._capture_btn.pack(side="left", padx=12)
+        
+        self._capture_status_var = tk.StringVar(value="Saved: 0")
+        ctk.CTkLabel(db_row, textvariable=self._capture_status_var, font=FONT_SMALL, text_color=C_GREEN).pack(side="left", padx=8)
 
         # Results panel
         right = ctk.CTkFrame(body, fg_color=C_CARD, corner_radius=12, width=280)
@@ -727,9 +748,11 @@ class EarBiometricsApp(ctk.CTk):
 
     def _start_camera(self):
         if not self.classifier.trained:
-            messagebox.showwarning("Model Not Trained",
-                                   "Please train the model first.")
-            return
+            logger.info("Camera started without a trained model (Dataset capture mode available).")
+        if hasattr(self, '_ui_updater') and self._ui_updater:
+            self.after_cancel(self._ui_updater)
+            self._ui_updater = None
+            
         cam_idx = int(self._cam_index.get())
         cap = cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
         if not cap.isOpened():
@@ -751,13 +774,50 @@ class EarBiometricsApp(ctk.CTk):
 
     def _stop_camera(self):
         self._cam_running = False
+        if hasattr(self, '_ui_updater') and self._ui_updater:
+            self.after_cancel(self._ui_updater)
+            self._ui_updater = None
         if self._cam_cap:
             self._cam_cap.release()
             self._cam_cap = None
         self._cam_start_btn.configure(text="▶  Start Camera",
                                        fg_color=C_GREEN, hover_color="#04a87f",
                                        text_color=C_BG)
-        self._cam_label.configure(image=None, text="Camera stopped.")
+        self._cam_label.configure(image="", text="Camera stopped.")
+
+    def _trigger_capture(self):
+        if not self._cam_running:
+            messagebox.showerror("Camera Stopped", "Start the camera first.")
+            return
+        name = self._capture_name_var.get().strip()
+        if not name:
+            messagebox.showerror("Input Error", "Please enter an identity name.")
+            return
+        self._request_capture = True
+
+    def _save_roi_to_dataset(self, full_frame, bbox, person_name):
+        import uuid
+        folder = os.path.join(self._dataset_root.get() or "dataset", person_name)
+        os.makedirs(folder, exist_ok=True)
+        
+        x, y, w, h = bbox
+        pad_x = int(w * 0.10)
+        pad_y = int(h * 0.10)
+        x1 = max(0, x - pad_x)
+        y1 = max(0, y - pad_y)
+        x2 = min(full_frame.shape[1], x + w + pad_x)
+        y2 = min(full_frame.shape[0], y + h + pad_y)
+        ear_crop = full_frame[y1:y2, x1:x2]
+        
+        filename = f"ear_{uuid.uuid4().hex[:6]}.jpg"
+        path = os.path.join(folder, filename)
+        cv2.imwrite(path, ear_crop)
+        
+        try:
+            current = int(self._capture_status_var.get().split(": ")[1])
+            self.after(0, lambda: self._capture_status_var.set(f"Saved: {current + 1}"))
+        except:
+            pass
 
     def _camera_worker(self):
         prev_time = time.time()
@@ -768,6 +828,13 @@ class EarBiometricsApp(ctk.CTk):
                 continue
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             roi, bbox = self.detector.detect(gray)
+            
+            # --- Live Dataset Capture Logic ---
+            if getattr(self, '_request_capture', False) and bbox is not None:
+                name = self._capture_name_var.get().strip()
+                self._save_roi_to_dataset(frame, bbox, name)
+                self._request_capture = False
+                
             label, confidence, top3 = "—", 0.0, []
             if self.classifier.trained:
                 try:
@@ -806,12 +873,12 @@ class EarBiometricsApp(ctk.CTk):
         if not self._cam_running:
             return
         try:
+            from PIL import ImageTk
             rgb = self._frame_queue.get_nowait()
             pil_img = Image.fromarray(rgb).resize((560, 420), Image.LANCZOS)
-            ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img,
-                                   size=(560, 420))
-            self._cam_label.configure(image=ctk_img, text="")
-            self._cam_label._image = ctk_img
+            photo = ImageTk.PhotoImage(image=pil_img)
+            self._cam_label.configure(image=photo, text="")
+            self._cam_label._image = photo  # keep a strong reference
         except queue.Empty:
             pass
         try:
@@ -831,7 +898,8 @@ class EarBiometricsApp(ctk.CTk):
                     w.configure(text="")
         except queue.Empty:
             pass
-        self.after(33, self._cam_update_ui)
+        if self._cam_running:
+            self._ui_updater = self.after(33, self._cam_update_ui)
 
     # ══════════════════════════════════════════════════════════════════════════
     #  IDENTIFY IMAGE LOGIC

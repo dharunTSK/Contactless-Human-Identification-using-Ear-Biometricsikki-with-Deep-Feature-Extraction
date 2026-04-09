@@ -1,6 +1,7 @@
 """
 classifier.py - SVM-based ear biometric classifier
 """
+from __future__ import annotations
 
 import os
 import numpy as np

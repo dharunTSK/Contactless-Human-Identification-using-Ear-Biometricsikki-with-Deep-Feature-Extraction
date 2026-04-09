@@ -1,6 +1,7 @@
 """
 dataset_manager.py - Dataset loading, augmentation, train/test split
 """
+from __future__ import annotations
 
 import os
 import numpy as np

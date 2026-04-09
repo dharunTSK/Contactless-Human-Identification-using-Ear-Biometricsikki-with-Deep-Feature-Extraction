@@ -1,6 +1,7 @@
 """
 feature_extractor.py - Hybrid LBP + HOG feature extraction
 """
+from __future__ import annotations
 
 import numpy as np
 import cv2

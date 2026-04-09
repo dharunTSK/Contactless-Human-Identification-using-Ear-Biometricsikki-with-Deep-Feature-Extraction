@@ -2,6 +2,7 @@
 ear_detector.py - Ear detection module
 Uses OpenCV Haar Cascade; falls back to full image ROI if cascade not found.
 """
+from __future__ import annotations
 
 import cv2
 import numpy as np
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Cascade Paths ────────────────────────────────────────────────────────────
 # OpenCV ships haarcascade_mcs_leftear.xml and haarcascade_mcs_rightear.xml
-_CV2_DATA = cv2.data.haarcascades  # type: ignore
+_CV2_DATA = "models"
 
 LEFT_EAR_CASCADE  = os.path.join(_CV2_DATA, "haarcascade_mcs_leftear.xml")
 RIGHT_EAR_CASCADE = os.path.join(_CV2_DATA, "haarcascade_mcs_rightear.xml")
