@@ -9,6 +9,7 @@ models/*.pkl
 
 # Generated reports (reproducible)
 reports/*.png
+reports/*.json
 
 # Virtual environment
 venv/
@@ -18,6 +19,9 @@ env/
 # IDE
 .vscode/
 .idea/
+.codex
+.codex/
+.streamlit/secrets.toml
 
 # OS
 Thumbs.db

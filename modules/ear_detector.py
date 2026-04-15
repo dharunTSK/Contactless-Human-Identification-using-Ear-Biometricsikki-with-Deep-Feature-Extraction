@@ -13,8 +13,11 @@ from modules.utils import preprocess_image, TARGET_SIZE
 logger = logging.getLogger(__name__)
 
 # ─── Cascade Paths ────────────────────────────────────────────────────────────
-# OpenCV ships haarcascade_mcs_leftear.xml and haarcascade_mcs_rightear.xml
-_CV2_DATA = "models"
+# Resolve model assets relative to the repository root so the detector works
+# from both the desktop GUI and the Streamlit entry point.
+_MODULE_DIR = os.path.dirname(__file__)
+_PROJECT_ROOT = os.path.dirname(_MODULE_DIR)
+_CV2_DATA = os.path.join(_PROJECT_ROOT, "models")
 
 LEFT_EAR_CASCADE  = os.path.join(_CV2_DATA, "haarcascade_mcs_leftear.xml")
 RIGHT_EAR_CASCADE = os.path.join(_CV2_DATA, "haarcascade_mcs_rightear.xml")

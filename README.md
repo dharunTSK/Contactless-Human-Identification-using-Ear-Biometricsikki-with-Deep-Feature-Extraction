@@ -1,81 +1,129 @@
-Design and Implementation of Contactless Human Identification using Ear Biometrics
-I. Introduction
-Authentication plays a fundamental role in ensuring secure access to critical systems and sensitive information. In modern digital environments, traditional authentication methods such as passwords, PINs, and ID cards are increasingly vulnerable to threats including impersonation, duplication, phishing, and brute-force attacks. These limitations highlight the need for more reliable, secure, and user-friendly authentication mechanisms.
-Biometric authentication has emerged as an effective solution by utilizing unique physiological characteristics of individuals for identity verification. Common biometric modalities include fingerprint, iris, face, and voice recognition. However, each of these techniques has certain limitations. Fingerprint recognition requires physical contact and may raise hygiene concerns, while facial recognition is sensitive to lighting conditions, facial expressions, and aging effects.
-Ear biometrics has gained attention as a robust and contactless alternative due to its distinctive anatomical structure and stability over time. The human ear maintains a consistent shape throughout life and is less affected by environmental factors compared to facial features. Additionally, ear recognition can be performed without physical contact, making it suitable for hygienic and surveillance-based applications.
-The proposed system focuses on contactless human identification using ear biometrics, where ear images are captured, preprocessed, and analyzed using feature extraction techniques such as Local Binary Patterns (LBP) and Histogram of Oriented Gradients (HOG). These features are then classified using a Support Vector Machine (SVM) to achieve accurate and efficient identification.
-By integrating image processing and machine learning techniques, the system aims to provide high accuracy, low false acceptance and rejection rates, and real-time authentication performance, making it suitable for modern security applications.
+# Contactless Human Identification using Ear Biometrics
 
+Ear biometric identification system using Haar-cascade ear detection, hybrid `LBP + HOG` feature extraction, and an `SVM` classifier. The project now includes a Streamlit web app for browser-based training, image identification, camera capture, and reports.
 
-Fig.1: Structure of the Human Ear for Biometric Identification
+## Features
 
-Fig.1 Structure of Human Ear (As shown in Fig.1, the ear consists of unique anatomical features such as helix, antihelix, tragus, and lobule which enable reliable identification.)
+- Streamlit web interface for training and inference
+- Hybrid feature extraction with `LBP + HOG`
+- `SVM` classifier with optional grid search
+- Dataset browser with per-identity counts
+- Uploaded-image and webcam capture identification
+- Evaluation reports with confusion matrix and per-class metrics
+- Docker support for always-on hosting
 
+## Project Structure
 
-II. Literature Review
-The field of biometric authentication has witnessed significant advancements with the integration of image processing and machine learning techniques. Among various biometric modalities, ear biometrics has emerged as a reliable and efficient method due to its stability and uniqueness.
-Ojala et al. (2002) introduced the Local Binary Patterns (LBP) method for texture analysis, which has been widely used in biometric recognition systems due to its robustness against illumination variations. LBP captures micro-level texture features that are essential for distinguishing between individuals.
-Dalal and Triggs (2005) proposed the Histogram of Oriented Gradients (HOG), which focuses on capturing edge and gradient structures in images. HOG has been effectively applied in object detection and biometric recognition due to its ability to represent shape and structural information.
-Burges (1998) introduced Support Vector Machines (SVM), which have become a popular choice for classification tasks in biometric systems. SVM provides high accuracy and strong generalization, especially for high-dimensional feature spaces.
-Kumar and Wu (2012) explored automated human identification using ear biometrics and demonstrated that ear-based recognition systems can achieve high accuracy with proper feature extraction techniques. Similarly, Chang et al. (2003) studied the combination of ear and face biometrics to improve recognition performance.
-Recent research has focused on hybrid approaches that combine multiple feature extraction techniques. The integration of LBP and HOG has been shown to improve recognition accuracy by capturing both texture and structural information. These hybrid systems, when combined with machine learning classifiers such as SVM, provide efficient and scalable solutions for real-time biometric authentication.
-Despite these advancements, challenges such as occlusion, dataset limitations, and environmental variations remain. The proposed system builds upon these studies by implementing a hybrid feature extraction approach to enhance accuracy and reliability.
-III. Methodology
-Traditional biometric systems often rely on single feature extraction techniques, which may result in lower accuracy and higher error rates under varying conditions. To overcome these limitations, the proposed system utilizes a hybrid feature extraction approach combined with machine learning classification.
-A. Proposed System
-The proposed system is a contactless ear biometric authentication framework designed to accurately identify individuals based on ear features. The system captures ear images, preprocesses them, extracts discriminative features, and classifies them using an SVM model. Based on the classification result, the system authenticates the user in real time.
+```text
+.
+├── streamlit_app.py
+├── main.py
+├── modules/
+├── models/
+├── dataset/
+├── .streamlit/config.toml
+├── Dockerfile
+└── requirements.txt
+```
 
-Fig.2 Block Diagram of Proposed System (As shown in Fig.2, the system consists of multiple stages including image acquisition, preprocessing, feature extraction, classification, and authentication.)
+## Dataset Layout
 
-B. System Modules
+Place images inside one folder per identity:
 
-1. Data Collection
-The system begins by collecting ear images from publicly available datasets such as the IIT Delhi Ear Dataset and AMI Dataset. These datasets include multiple images per individual with variations in orientation, lighting, and background.
-Sample images include side-profile ear captures under controlled conditions. The dataset ensures diversity and improves model training.
-2. Preprocessing
-The captured ear images undergo a preprocessing stage to improve their quality and ensure consistency for further analysis. Initially, the images are converted into grayscale to reduce computational complexity while preserving essential features. Noise present in the images is removed using appropriate filtering techniques to enhance clarity.
-Histogram equalization is then applied to improve contrast and highlight important details in the ear images. The images are further normalized and resized to maintain uniform dimensions across the dataset, which helps in achieving consistent results during processing.
-Finally, the Region of Interest (ROI), focusing specifically on the ear region, is extracted for accurate analysis. This preprocessing stage ensures that the input images are well-prepared and suitable for effective feature extraction.
-3. Feature Extraction
-The system employs two important feature extraction techniques to effectively analyze ear images. These techniques help in capturing both texture and structural information, which improves the overall performance of the identification system.
-Local Binary Patterns (LBP) is used to extract texture information from the ear images. It is highly robust to illumination changes and provides efficient and fast computation, making it suitable for real-time applications.
-Histogram of Oriented Gradients (HOG) is used to capture edge and shape features of the ear. It represents the structural characteristics of the ear and plays a key role in improving the accuracy of the recognition system.
+```text
+dataset/
+├── Person_01/
+│   ├── img1.jpg
+│   ├── img2.jpg
+│   └── ...
+├── Person_02/
+│   ├── img1.jpg
+│   └── ...
+└── ...
+```
 
-4. Feature Fusion
-The extracted LBP and HOG features are combined into a single feature vector. This hybrid approach enhances the system’s ability to distinguish between individuals.
-5. Matching Algorithm
-The fused feature vector is compared with stored templates using a Support Vector Machine (SVM) classifier. The classifier computes similarity and predicts the identity of the individual.
-6. Authentication Decision
-The system makes an authentication decision based on the classification result. If the predicted class matches a stored identity in the database, the user is successfully authenticated and granted access. Otherwise, if there is no match, the system denies access to ensure security.
-7. Result Storage
-Authentication results are stored securely for logging and monitoring purposes.
+Minimum `5` images per identity is recommended.
 
-Fig.3 Flowchart of System (As shown in Fig.3, the process starts with image capture, followed by preprocessing, feature extraction, classification, and authentication decision.)
+## Local Run
 
-IV. Result (Include Figures in Result)
+Install dependencies:
 
-The proposed ear biometric system was tested using dataset images under controlled conditions to evaluate its performance. The system achieved high accuracy in the range of approximately 98% to 100%, demonstrating its effectiveness in identifying individuals. Real-time processing also showed fast response times, making the system suitable for practical applications.
-The use of hybrid feature extraction techniques significantly improved the classification performance of the system. Unauthorized users were effectively rejected, ensuring strong security. Additionally, reliable similarity scores were obtained using the Support Vector Machine (SVM), which enhanced the decision-making process.
-In terms of performance observations, the system maintained consistent accuracy across multiple classes. It exhibited low false acceptance and false rejection rates, indicating high reliability. The fusion of features played a crucial role in improving overall system performance and robustness.
+```bash
+pip install -r requirements.txt
+```
 
+Start the Streamlit app:
 
-Fig.4 Accuracy Graph (Illustrates classification accuracy of the system)
+```bash
+streamlit run streamlit_app.py
+```
 
-Fig.5 FAR vs FRR Graph (Shows trade-off between security and usability)
+The desktop GUI is still available if you want it:
 
-Conclusion
-The proposed contactless ear biometric authentication system provides a secure, efficient, and reliable solution for human identification. By integrating LBP and HOG feature extraction with SVM classification, the system achieves high accuracy and fast processing. The contactless nature of the system enhances usability and hygiene while maintaining strong security.
-The system effectively eliminates traditional authentication limitations and demonstrates its suitability for real-world applications such as access control, surveillance, and identity verification.
-Future Scope
-The system can be further enhanced by integrating deep learning models such as Convolutional Neural Networks (CNNs) to improve accuracy in complex environments. Additionally, incorporating multimodal biometrics (ear + face) can enhance system reliability. Future improvements may also include liveness detection, mobile deployment, and cloud-based authentication systems to enable large-scale real-time applications.
-References
-1.Hurley, David J., Mark S. Nixon, and John N. Carter.“Force Field Feature Extraction for Ear Biometrics”. Computer Vision and Image Understanding, vol. 98, no. 3, 2005, pp. 491–512.
-Kumar, Ajay, and Chih-Chung Wu.“Automated Human Identification Using Ear Imaging”.  Pattern Recognition, vol. 45, no. 3, 2012, pp. 956–968.
-Emeršič, Žiga, Vitomir Štruc, and Peter Peer.“The Annotated Web Ears (AWE) Database”. IEEE International Joint Conference on Biometrics (IJCB), 2017.
-Naveena, M., and G. Hemantha Kumar.“Classification of Human Ear by Extracting HOG Features and Support Vector Machine”. International Journal of Computer Applications, vol. 177, no. 40, 2020.
-Wu, Y., et al.“Human Ear Recognition Using HOG with PCA Dimension Reduction and LBP”. IEEE ICEIEC, 2019.
-Oyebiyi, O. G., et al.“A Systematic Literature Review on Human Ear Biometrics”. Information, vol. 14, no. 3, 2023.
-Omara, Ibrahim, et al.“Discriminative Local Feature Fusion for Ear Recognition Problem”. Proceedings of ICBBB, 2018.
-Raghavendra, R., et al. “Improved Ear Verification Using Hybrid Texture Features”. Pattern Recognition, 2018.
-Kamboj, Aman, et al.“A Comprehensive Survey and Deep Learning-Based Approach for Ear Recognition”. IEEE Access, 2021.
-Hammad, Mahmoud, et al.“Fine-Grained Soft Ear Biometrics for Augmenting Human Recognition”. Computer Systems Science and Engineering, 2023.
+```bash
+python main.py
+```
+
+## Permanent Hosting Options
+
+### Option 1: Streamlit Community Cloud
+
+Best when you want the simplest public deployment with a stable `streamlit.app` URL.
+
+1. Push this repository to GitHub.
+2. Go to `https://share.streamlit.io/`.
+3. Create a new app from your repository.
+4. Set the entrypoint file to `streamlit_app.py`.
+5. Pick a custom subdomain if you want a cleaner public URL.
+
+### Option 2: Always-on container hosting
+
+Best when you need a true always-on app without Streamlit Community Cloud sleep behavior.
+
+Build the image:
+
+```bash
+docker build -t ear-biometrics-streamlit .
+```
+
+Run the container:
+
+```bash
+docker run -p 8501:8501 ear-biometrics-streamlit
+```
+
+You can deploy the same container to Render, Railway, Fly.io, a VPS, or any Docker-capable host.
+
+## Streamlit App Tabs
+
+- `Dashboard`: pipeline summary and dataset overview
+- `Train Model`: dataset loading, preprocessing, model training, and saving
+- `Identify Image`: upload an image and predict identity
+- `Camera Capture`: capture from the browser webcam and predict identity
+- `Reports`: confusion matrix and per-class precision, recall, and F1
+
+## Model Output
+
+The trained classifier is saved to:
+
+```text
+models/ear_svm_model.pkl
+```
+
+Evaluation artifacts are saved to:
+
+```text
+reports/
+├── confusion_matrix.png
+├── per_class_metrics.png
+└── latest_metrics.json
+```
+
+## References
+
+1. Hurley et al. (2005), Force Field Feature Extraction for Ear Biometrics
+2. Kumar and Wu (2012), Automated Human Identification using Ear Imaging
+3. Emersic et al. (2017), AWE Database
+4. Naveena and Hemantha Kumar (2020), HOG + SVM for Ear Classification
+5. Wu et al. (2019), HOG + PCA + LBP for Ear Recognition
+6. Oyebiyi et al. (2023), Systematic Literature Review on Ear Biometrics
